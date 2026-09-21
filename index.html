@@ -108,6 +108,10 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
 #printArea .p-simp{border:1px solid #555;padding:8px 10px;margin-top:10px;break-inside:avoid}
 #printArea .p-simp p{margin-top:4px;font-size:9.5px}
 #printArea .p-note{margin-top:8px;font-size:8px;color:#333;break-inside:avoid}
+#printArea .p-sect-title{font-size:12px;font-weight:700;margin:6px 0 4px;text-align:left}
+@media print{
+  #printArea .p-sect{page-break-before:auto}
+}
 @media print{
   #printArea .p-grp td,#printArea thead th,#printArea .ok,#printArea .bad{
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -151,7 +155,7 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
       <input type="file" id="fileInput" accept=".xlsx,.pdf" multiple hidden>
       <div class="refbox">📌 <b>Sumber data B1-4:</b> unduh dari <b>SPAN INT Kemenkeu → TKD → Modul DAK Fisik → Download → menu “Data Kontrak”</b><br>
       <a href="https://spanint.kemenkeu.go.id/tkd/#/modul/dakf/download" target="_blank" rel="noopener">https://spanint.kemenkeu.go.id/tkd/#/modul/dakf/download</a></div>
-      <div class="refbox" style="background:var(--pri-soft);border-color:#93c5fd;color:#1e3a8a">📌 <b>Sumber data B1-6 (disarankan: PDF):</b> unduh <b>PDF “Monitoring Pemenuhan Persyaratan Penyaluran Tahap 1 REGULER”</b> dari <b>SPAN INT Kemenkeu → TKD → Modul Dana Desa → Monitoring Syarat Desa</b><br>
+      <div class="refbox" style="background:var(--pri-soft);border-color:#93c5fd;color:#1e3a8a">📌 <b>Sumber data B1-6 (disarankan: PDF):</b> unduh <b>PDF “Monitoring Pemenuhan Persyaratan Penyaluran” Tahap 1 dan/atau Tahap 2</b> dari <b>SPAN INT Kemenkeu → TKD → Modul Dana Desa → Monitoring Syarat Desa</b> (tahap terdeteksi otomatis; keduanya digabung per desa)<br>
       <a href="https://spanint.kemenkeu.go.id/tkd/#/modul/dd/2025/getMonitoringSrtDesa/0305/REGULER/1" target="_blank" rel="noopener">https://spanint.kemenkeu.go.id/tkd/#/modul/dd/2025/getMonitoringSrtDesa/0305/REGULER/1</a><br>
       <small>Alternatif: Excel <b>OMSPAN-TKD</b> (kolom KAB/KOTA, DESA, KODE DESA, STATUS DESA, KUASA, APBDES(NON BLT), BLT, PERKADES(BLT), KUNCI_BLT, SALUR TAHAP 1 NONEARMARK, SALUR TAHAP 1 EARMARK) — namun banyak kolom kosong, PDF lebih lengkap (ada kecamatan, status verifikasi, dan nominal salur).</small></div>
       <div class="hint">Anti-duplikat otomatis: baris B1-4 yang sama persis diabaikan; desa B1-6 yang identik diabaikan (kunci: kode desa) dan bila statusnya berubah akan <b>diperbarui</b>. Data baru selalu ditambahkan ke akumulasi.</div>
@@ -176,8 +180,9 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
       <h2>3️⃣ Hasil &amp; Download B1-4</h2>
       <div class="btn-row">
         <button class="btn btn-pri" id="btnDl14" disabled>📥 Download Excel B1-4</button>
-        <button class="btn btn-sec" id="btnPdf14">🖨 Cetak PDF B1-4</button>
+        <button class="btn btn-sec" id="btnPdf14">🖨 Cetak PDF (B1-4 & B1-6)</button>
       </div>
+      <div class="hint">Cetak PDF otomatis memuat <b>semua kertas kerja yang sudah ada datanya</b> (B1-4 dan/atau B1-6), masing-masing di halaman terpisah.</div>
     </section>
 
     <section class="card">
@@ -197,16 +202,18 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
         <div class="stat"><div class="n ok" id="st16NE">0 / 0</div><div class="l">Salur NE T-I / Belum</div></div>
         <div class="stat"><div class="n ok" id="st16E">0 / 0</div><div class="l">Salur Earmark T-I / Belum</div></div>
         <div class="stat"><div class="n" id="st16Dok">0 / 0 / 0</div><div class="l">Kuasa / APBDes / Perkades</div></div>
+        <div class="stat"><div class="n" style="color:var(--pri)">T2</div><div class="l" id="st16T2">belum ada data</div></div>
       </div>
-      <div class="hint">Pemda: <b id="st16Pemda">—</b> · Nominal salur Tahap I (NE · Earmark): <b id="st16Nom">—</b> · Dokumen Tahap II &amp; dokumen lain (Surat Pengantar, Lap. KPM, Akta &amp; Komitmen KDMP) belum tercakup sumber data → ditandai “—”.</div>
+      <div class="hint">Pemda: <b id="st16Pemda">—</b> · Nominal salur Tahap I (NE · Earmark): <b id="st16Nom">—</b> · Dokumen Tahap II diisi dari PDF Tahap 2 (upload otomatis digabung per desa); Lap. Realisasi TA 2024 &amp; Surat Pengantar tetap “—” (belum tercakup sumber).</div>
     </section>
 
     <section class="card">
       <h2>3️⃣ Hasil &amp; Download B1-6</h2>
       <div class="btn-row">
         <button class="btn btn-pri" id="btnDl16" disabled>📥 Download Excel B1-6</button>
-        <button class="btn btn-sec" id="btnPdf16">🖨 Cetak PDF B1-6</button>
+        <button class="btn btn-sec" id="btnPdf16">🖨 Cetak PDF (B1-4 & B1-6)</button>
       </div>
+      <div class="hint">Cetak PDF otomatis memuat <b>semua kertas kerja yang sudah ada datanya</b> (B1-4 dan/atau B1-6), masing-masing di halaman terpisah.</div>
     </section>
 
     <section class="card">
@@ -322,6 +329,18 @@ const ACTIVE_SHEETS = ['B1-4', 'B1-6'];
 const LS_E14 = 'kk_b14_entries', LS_E16 = 'kk_b16_entries', LS_LOG = 'kk_log';
 const MAXNO = 30;
 
+/* ================= state ================= */
+let entries14 = [];
+let entries16 = [];
+let uplog = [];
+function persist(){
+  try {
+    localStorage.setItem(LS_E14, JSON.stringify(entries14));
+    localStorage.setItem(LS_E16, JSON.stringify(entries16));
+    localStorage.setItem(LS_LOG, JSON.stringify(uplog.slice(-100)));
+  } catch (e) {}
+}
+
 /* ================= util ================= */
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -369,17 +388,14 @@ function stOK16(v){
 }
 
 const SPAN_DD_URL = 'https://spanint.kemenkeu.go.id/tkd/#/modul/dd/2025/getMonitoringSrtDesa/0305/REGULER/1';
-const ROW16_RE = /^(\d{1,4})\s+(\d{4})-([A-Z][A-Z .]*[A-Z.])\s+(.+?)\s*-\s*Kec\.([A-Za-z .]+?)\s+(\d{10})\s+(MAJU|BERKEMBANG|MANDIRI)\s+(Sudah Verifikasi|Belum Verifikasi|-)\s+(UPLOAD|-)\s+(upload|-)\s+(YA|TIDAK|-)\s+(UPLOAD|-)\s+(sudah kunci|belum kunci|-)\s+([\d.,]+)\s+([\d.,]+)\s*$/;
+const ROW16T1_RE = /^(\d{1,4})\s+(\d{4})-([A-Z][A-Z .]*[A-Z.])\s+(.+?)\s*-\s*Kec\.([A-Za-z .]+?)\s+(\d{10})\s+(MAJU|BERKEMBANG|MANDIRI)\s+(Sudah Verifikasi|Belum Verifikasi|-)\s+(UPLOAD|-)\s+(upload|-)\s+(YA|TIDAK|-)\s+(UPLOAD|-)\s+(sudah kunci|belum kunci|-)\s+([\d.,]+)\s+([\d.,]+)\s*$/;
+const ROW16T2_RE = /^(\d{1,4})\s+(\d{4})-([A-Za-z.]+\s+[A-Za-z]+(?:\s+[A-Za-z]+)?)\s+(.+?)\s*-\s*Kec\.([A-Za-z .]+?)\s+(\d{10})\s+(MAJU|BERKEMBANG|MANDIRI)\s+([A-Za-z]+(?: [A-Za-z]+)?)\s+(sudah kunci|belum kunci|-)\s+([\d.,]+)\s+([\d.,]+)\s+(UPLOAD|-)(?:\s+([\d.,]+))?\s*$/;
 
-/* urai PDF "Monitoring Pemenuhan Persyaratan Penyaluran" (DJPb) */
-async function parsePdf16(buf, fname){
-  if (!window.pdfjsLib) throw new Error('Pustaka PDF (pdf.js) tidak berhasil dimuat.');
-  const doc = await pdfjsLib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false }).promise;
-  const out = [];
-  let gagal = 0;
+/* kumpulkan baris teks PDF (diurut per halaman & posisi y) */
+async function pdfLines(doc){
+  const all = [];
   for (let p = 1; p <= doc.numPages; p++){
-    const page = await doc.getPage(p);
-    const tc = await page.getTextContent();
+    const tc = await (await doc.getPage(p)).getTextContent();
     const lines = new Map();
     for (const it of tc.items){
       if (typeof it.str !== 'string') continue;
@@ -387,151 +403,206 @@ async function parsePdf16(buf, fname){
       if (!lines.has(y)) lines.set(y, []);
       lines.get(y).push({x: it.transform[4], s: it.str});
     }
-    for (const y of [...lines.keys()].sort((a, b) => b - a)){
-      const line = lines.get(y).sort((a, b) => a.x - b.x).map(o => o.s).join(' ').replace(/\s+/g, ' ').trim();
-      const m = line.match(ROW16_RE);
-      if (m){
-        const ne = parseInt(m[14].replace(/[.,]/g, ''), 10);
-        const ee = parseInt(m[15].replace(/[.,]/g, ''), 10);
-        out.push({
-          pemda: m[3].trim(), kab: m[2], desa: m[4].trim(), kec: m[5].trim(),
-          kodesa: m[6], status: m[7],
-          kuasa: stOK16(m[8]), apbdes: stOK16(m[9]), adk: stOK16(m[10]),
-          blt: stOK16(m[11]), perkades: stOK16(m[12]), tayl: stOK16(m[13]),
-          salur_ne: ne > 0 ? true : (isNaN(ne) ? null : false),
-          salur_e: ee > 0 ? true : (isNaN(ee) ? null : false),
-          salur_ne_num: isNaN(ne) ? null : ne, salur_e_num: isNaN(ee) ? null : ee,
-          sumber: fname
-        });
-      } else if (/^\d+\s+\d{4}-/.test(line)) gagal++;
-    }
+    for (const y of [...lines.keys()].sort((a, b) => b - a))
+      all.push(lines.get(y).sort((a, b) => a.x - b.x).map(o => o.s).join(' ').replace(/\s+/g, ' ').trim());
   }
+  return all;
+}
+function normPemda(x){ return String(x || '').toUpperCase().replace(/\s+/g, ' ').trim(); }
+function numId(s){ const n = parseInt(String(s || '').replace(/[.,]/g, ''), 10); return isNaN(n) ? null : n; }
+function numDec(s){ const n = parseFloat(String(s || '').replace(',', '.')); return isNaN(n) ? null : n; }
+
+function parseT1(lines, fname){
+  const out = []; let gagal = 0;
+  for (const line of lines){
+    const m = line.match(ROW16T1_RE);
+    if (m){
+      const ne = numId(m[14]), ee = numId(m[15]);
+      out.push({pemda: normPemda(m[3]), kab: m[2], desa: m[4].trim(), kec: m[5].trim(),
+        kodesa: m[6], status: m[7],
+        kuasa: stOK16(m[8]), apbdes: stOK16(m[9]), adk: stOK16(m[10]),
+        blt: stOK16(m[11]), perkades: stOK16(m[12]), tayl: stOK16(m[13]),
+        salur_ne: ne > 0 ? true : (ne == null ? null : false),
+        salur_e: ee > 0 ? true : (ee == null ? null : false),
+        salur_ne_num: ne, salur_e_num: ee, sumber: fname});
+    } else if (/^\d+\s+\d{4}-/.test(line)) gagal++;
+  }
+  return {out, gagal};
+}
+function parseT2(lines, fname){
+  const out = []; let gagal = 0;
+  for (let i = 0; i < lines.length; i++){
+    const m = lines[i].match(ROW16T2_RE);
+    if (m){
+      let nom = numId(m[13]);
+      if (nom == null){                       // nominal turun ke baris berikutnya
+        for (let j = i + 1; j <= Math.min(i + 3, lines.length - 1); j++){
+          if (/^[\d.]+$/.test(lines[j].trim())){ nom = numId(lines[j]); break; }
+        }
+      }
+      const okRaw = String(m[8]).toUpperCase();
+      out.push({pemda: normPemda(m[3]), kab: m[2], desa: m[4].trim(), kec: m[5].trim(),
+        kodesa: m[6], status: m[7],
+        t2_ok: okRaw === 'OK' ? true : (okRaw === '-' ? null : false),
+        pagu_tayl: stOK16(m[9]), serap: numDec(m[10]), capout: numDec(m[11]),
+        upload_t2: stOK16(m[12]),
+        salur_t2: nom > 0 ? true : (nom == null ? null : false),
+        salur_t2_num: nom, sumber: fname});
+    } else if (/^\d+\s+\d{4}-/.test(lines[i]) && !/^(Serap|Output)\s*:/.test(lines[i])) gagal++;
+  }
+  return {out, gagal};
+}
+
+/* urai PDF Monitoring Pemenuhan Persyaratan (Tahap 1 / Tahap 2 otomatis) */
+async function parsePdf16(buf, fname){
+  if (!window.pdfjsLib) throw new Error('Pustaka PDF (pdf.js) tidak berhasil dimuat.');
+  const doc = await pdfjsLib.getDocument({data: new Uint8Array(buf), isEvalSupported: false}).promise;
+  const lines = await pdfLines(doc);
+  const isT2 = lines.some(l => /SALUR TAHAP\s*2|PENYERAPAN/i.test(l));
+  const {out, gagal} = isT2 ? parseT2(lines, fname) : parseT1(lines, fname);
   if (!out.length)
     throw new Error('Tidak ada baris desa yang dikenali — pastikan ini PDF "Monitoring Pemenuhan Persyaratan Penyaluran" dari SPAN.');
-  if (gagal) uplog.push({waktu: timeStr(), file: fname, fmt: 'peringatan', err: gagal + ' baris desa tidak terbaca (format menyimpang)'});
-  return out;
-}
-
-/* ================= data tersimpan ================= */
-let entries14 = [], entries16 = [], uplog = [];
-try { entries14 = JSON.parse(localStorage.getItem(LS_E14)) || []; } catch (e) {}
-try { entries16 = JSON.parse(localStorage.getItem(LS_E16)) || []; } catch (e) {}
-try { uplog = JSON.parse(localStorage.getItem(LS_LOG)) || []; } catch (e) {}
-function persist(){
-  try {
-    localStorage.setItem(LS_E14, JSON.stringify(entries14));
-    localStorage.setItem(LS_E16, JSON.stringify(entries16));
-  } catch (e) { toast('⚠️ Penyimpanan browser penuh — Cadangkan (JSON) lalu Reset.','bad'); }
-  try { localStorage.setItem(LS_LOG, JSON.stringify(uplog.slice(-30))); } catch (e) {}
-}
-
-/* ================= parser sumber ================= */
-function readTable(wb){
-  const ws = wb.worksheets[0];
-  if (!ws) throw new Error('File tidak memiliki sheet.');
-  const rows = [];
-  ws.eachRow(r => rows.push(r.values));
-  if (!rows.length) throw new Error('Sheet pertama kosong.');
-  const idx = {};
-  (rows[0] || []).forEach((h, i) => { const k = cellStr(h).toUpperCase(); if (k && idx[k] == null) idx[k] = i; });
-  return {rows, idx, g: (arr, col) => { const i = idx[col]; return (i != null && i < arr.length) ? cellStr(arr[i]) : ''; }};
-}
-
-function parseB14(tbl, fname){
-  const need = ['BIDANG','NM_BIDANG','NM_LOKASI','SUBBIDANG','NM_SUBBIDANG','MENU_KEGIATAN',
-    'NM_MENU_KEGIATAN','RINCIAN_KEGIATAN','NM_RINCIAN_KEGIATAN','NO_KONTRAK','TANGGAL_KONTRAK',
-    'JUDUL_KONTRAK','NM_JENIS_DANA'];
-  const missing = need.filter(c => tbl.idx[c] == null);
-  if (missing.length) throw new Error('Kolom B1-4 tidak ditemukan: ' + missing.join(', '));
-  const out = [];
-  for (let ri = 1; ri < tbl.rows.length; ri++){
-    const r = tbl.rows[ri]; if (!r) continue;
-    const g = c => tbl.g(r, c);
-    const bidang = g('NM_BIDANG'), pemda = g('NM_LOKASI'), subbidang = g('NM_SUBBIDANG');
-    const rk = g('RINCIAN_KEGIATAN'), noKontrak = g('NO_KONTRAK');
-    if (!bidang && !pemda && !subbidang && !rk && !noKontrak) continue;
-    const pen = g('NM_MENU_KEGIATAN').toLowerCase() === 'menu penunjang';
-    out.push({bidang, pemda, subbidang, kode_bidang: g('BIDANG'), kode_subbidang: g('SUBBIDANG'),
-      rk, nm_rk: g('NM_RINCIAN_KEGIATAN'), no_kontrak: noKontrak, tgl: g('TANGGAL_KONTRAK'),
-      judul: g('JUDUL_KONTRAK'), jenis: pen ? 'PENUNJANG' : 'FISIK',
-      kesesuaian: pen ? 'Sesuai' : 'Tidak Sesuai', jenis_dana: g('NM_JENIS_DANA'), sumber: fname});
-  }
-  return out;
-}
-
-const KAB_MAP = {'3325': 'KAB. BATANG', '3326': 'KAB. PEKALONGAN', '3375': 'KOTA PEKALONGAN'};
-function namaPemda(kodesa, kabRaw){
-  const p4 = String(kodesa || '').slice(0, 4);
-  return KAB_MAP[p4] || (kabRaw ? 'KODE ' + kabRaw : '—');
-}
-function parseB16(tbl, fname){
-  const need = ['KAB/KOTA','DESA','KODE DESA','STATUS DESA','KUASA','APBDES(NON BLT)',
-    'PERKADES(BLT)','SALUR TAHAP 1 NONEARMARK','SALUR TAHAP 1 EARMARK'];
-  const missing = need.filter(c => tbl.idx[c] == null);
-  if (missing.length) throw new Error('Kolom B1-6 tidak ditemukan: ' + missing.join(', '));
-  const out = [];
-  for (let ri = 1; ri < tbl.rows.length; ri++){
-    const r = tbl.rows[ri]; if (!r) continue;
-    const g = c => tbl.g(r, c);
-    const desa = g('DESA'), kodesa = g('KODE DESA').replace(/\D/g, '');
-    if (!desa && !kodesa) continue;
-    out.push({pemda: namaPemda(kodesa, g('KAB/KOTA')), kab: g('KAB/KOTA'),
-      desa, kodesa, status: g('STATUS DESA'),
-      kuasa: flag01(g('KUASA')), apbdes: flag01(g('APBDES(NON BLT)')),
-      blt: flag01(g('BLT')), perkades: flag01(g('PERKADES(BLT)')), kunci_blt: g('KUNCI_BLT'),
-      salur_ne: flag01(g('SALUR TAHAP 1 NONEARMARK')), salur_e: flag01(g('SALUR TAHAP 1 EARMARK')),
-      sumber: fname});
-  }
-  return out;
+  if (gagal) uplog.push({waktu: timeStr(), file: fname, fmt: 'peringatan',
+    err: gagal + ' baris desa tidak terbaca (format menyimpang)'});
+  return {tahap: isT2 ? 2 : 1, rows: out};
 }
 
 /* ================= upload (auto-deteksi format) ================= */
+function sumber16(a, b){
+  const s = [];
+  for (const x of String(a || '').split(' | ')) if (x && !s.includes(x)) s.push(x);
+  if (b && !s.includes(b)) s.push(b);
+  return s.join(' | ');
+}
+/* gabungkan per KODE DESA: nilai baru (terdefinisi) menimpa; nilai lama dipertahankan bila baru tidak ada */
+function merge16(rows){
+  const m = new Map(entries16.map((e, i) => [key16(e), i]));
+  let add = 0, dup = 0, upd = 0;
+  for (const e of rows){
+    const k = key16(e);
+    if (!m.has(k)){ m.set(k, entries16.length); entries16.push(e); add++; continue; }
+    const i = m.get(k), old = entries16[i];
+    const merged = {...old};
+    for (const kk of Object.keys(e)){
+      if (kk === 'sumber') continue;
+      if (e[kk] !== undefined && e[kk] !== null) merged[kk] = e[kk];
+    }
+    merged.sumber = sumber16(old.sumber, e.sumber);
+    const berubah = JSON.stringify({...old, sumber: ''}) !== JSON.stringify({...merged, sumber: ''});
+    if (berubah){ entries16[i] = merged; upd++; }
+    else dup++;
+  }
+  return {add, dup, upd};
+}
 const key14 = e => [e.bidang, e.pemda, e.subbidang, e.rk, e.nm_rk, e.no_kontrak, e.tgl, e.judul].join('').toLowerCase().replace(/\s+/g, ' ').trim();
 const key16 = e => e.kodesa || (e.desa || '').toLowerCase();
+
+/* ================= baca xlsx sumber ================= */
+function readTable(wb){
+  const ws = wb.worksheets[0];
+  if (!ws) throw new Error('Workbook tidak memiliki lembar.');
+  let headerRow = 0, idx = {};
+  ws.eachRow((row, n) => {
+    if (headerRow) return;
+    const cand = {};
+    row.eachCell((cell, ci) => {
+      const h = cellStr(cell.value).replace(/\s+/g, ' ').trim().toUpperCase();
+      if (h) cand[h] = ci;
+    });
+    if ('NO_KONTRAK' in cand || 'KODE DESA' in cand){ headerRow = n; idx = cand; }
+  });
+  if (!headerRow)
+    throw new Error('Baris header tidak ditemukan (kolom NO_KONTRAK / KODE DESA tidak ada).');
+  const rows = [];
+  ws.eachRow((row, n) => {
+    if (n <= headerRow) return;
+    const arr = (row.values || []).map(cellStr);
+    if (arr.some(v => v !== '')) rows.push(arr);
+  });
+  const get = (vals, name) => {
+    const ci = idx[name];
+    const v = ci == null ? '' : (vals[ci] || '');
+    return String(v).trim();
+  };
+  return {idx, rows, get};
+}
+
+/* B1-4 — file "Data Kontrak" SPAN Modul DAK Fisik */
+function parseB14(tbl, fname){
+  const out = [];
+  for (const v of tbl.rows){
+    if (!tbl.get(v, 'NO_KONTRAK') && !tbl.get(v, 'RINCIAN_KEGIATAN')) continue;
+    const penunjang = /penunjang/i.test(tbl.get(v, 'NM_MENU_KEGIATAN'));
+    out.push({
+      bidang: [tbl.get(v, 'BIDANG'), tbl.get(v, 'NM_BIDANG')].filter(Boolean).join(' - '),
+      pemda: tbl.get(v, 'NM_LOKASI'),
+      subbidang: [tbl.get(v, 'SUBBIDANG'), tbl.get(v, 'NM_SUBBIDANG')].filter(Boolean).join(' - '),
+      rk: tbl.get(v, 'RINCIAN_KEGIATAN'),
+      nm_rk: tbl.get(v, 'NM_RINCIAN_KEGIATAN'),
+      no_kontrak: tbl.get(v, 'NO_KONTRAK'),
+      tgl: tbl.get(v, 'TANGGAL_KONTRAK'),
+      judul: tbl.get(v, 'JUDUL_KONTRAK'),
+      jenis: penunjang ? 'PENUNJANG' : 'FISIK',
+      kesesuaian: penunjang ? 'Sesuai' : 'Tidak Sesuai',
+      jenis_dana: tbl.get(v, 'NM_JENIS_DANA') || 'DAK Fisik',
+      sumber: fname
+    });
+  }
+  if (!out.length) throw new Error('Tidak ada baris kontrak yang terbaca.');
+  return out;
+}
+
+/* B1-6 — file Excel "OMSPAN-TKD" (alternatif dari PDF) */
+function parseB16(tbl, fname){
+  const salur = raw => {
+    if (raw === '' || raw === '-') return {b: null, n: null};
+    const n = numId(raw);
+    if (n != null) return {b: n > 0, n: n || null};
+    return {b: stOK16(raw), n: null};
+  };
+  const out = [];
+  for (const v of tbl.rows){
+    const kodesa = tbl.get(v, 'KODE DESA');
+    const desa = tbl.get(v, 'DESA');
+    if (!kodesa || !desa) continue;
+    const ne = salur(tbl.get(v, 'SALUR TAHAP 1 NONEARMARK'));
+    const em = salur(tbl.get(v, 'SALUR TAHAP 1 EARMARK'));
+    const kab = tbl.get(v, 'KAB/KOTA');
+    out.push({pemda: normPemda(kab) || kab, kab, desa, kec: '', kodesa,
+      status: tbl.get(v, 'STATUS DESA'),
+      kuasa: stOK16(tbl.get(v, 'KUASA')), apbdes: stOK16(tbl.get(v, 'APBDES(NON BLT)')),
+      blt: stOK16(tbl.get(v, 'BLT')), perkades: stOK16(tbl.get(v, 'PERKADES(BLT)')),
+      tayl: stOK16(tbl.get(v, 'KUNCI_BLT')),
+      salur_ne: ne.b, salur_ne_num: ne.n, salur_e: em.b, salur_e_num: em.n,
+      sumber: fname});
+  }
+  if (!out.length) throw new Error('Tidak ada baris desa yang terbaca.');
+  return out;
+}
 
 async function handleFiles(fileList){
   const files = Array.from(fileList || []);
   if (!files.length) return;
   const known14 = new Set(entries14.map(key14));
-  const byKode16 = new Map(entries16.map((e, i) => [key16(e), i]));
   for (const f of files){
     const isPdf = /\.pdf$/i.test(f.name);
     if (!/(\.xlsx|\.pdf)$/i.test(f.name)){ uplog.push({waktu: timeStr(), file: f.name, err: 'Format harus .xlsx atau .pdf'}); continue; }
     try {
       const wb = new ExcelJS.Workbook();
       if (isPdf){
-        const rows = await parsePdf16(await f.arrayBuffer(), f.name);
-        const byKode16 = new Map(entries16.map((e, i) => [key16(e), i]));
-        let add = 0, dup = 0, upd = 0;
-        for (const e of rows){
-          const k = key16(e);
-          if (byKode16.has(k)){
-            const i = byKode16.get(k);
-            const sama = JSON.stringify({...entries16[i], sumber: ''}) === JSON.stringify({...e, sumber: ''});
-            if (sama) dup++;
-            else { entries16[i] = e; upd++; }
-          } else { byKode16.set(k, entries16.length); entries16.push(e); add++; }
-        }
-        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-6 (PDF Monitoring)', dibaca: rows.length, tambah: add, dup, upd});
-        toast(`✅ B1-6 dari PDF: ${add} desa ditambahkan, ${upd} diperbarui, ${dup} identik diabaikan.`, 'ok');
+        const {tahap, rows} = await parsePdf16(await f.arrayBuffer(), f.name);
+        const r16 = merge16(rows);
+        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-6 (PDF Tahap ' + tahap + ')', dibaca: rows.length, tambah: r16.add, dup: r16.dup, upd: r16.upd});
+        toast(`✅ B1-6 Tahap ${tahap}: ${r16.add} desa baru, ${r16.upd} diperbarui/digabung, ${r16.dup} identik.`, 'ok');
         continue;
       }
       await wb.xlsx.load(await f.arrayBuffer());
       const tbl = readTable(wb);
       if (tbl.idx['KODE DESA'] != null || tbl.idx['SALUR TAHAP 1 NONEARMARK'] != null){
         const rows = parseB16(tbl, f.name);
-        let add = 0, dup = 0, upd = 0;
-        for (const e of rows){
-          const k = key16(e);
-          if (byKode16.has(k)){
-            const i = byKode16.get(k);
-            const sama = JSON.stringify({...entries16[i], sumber: ''}) === JSON.stringify({...e, sumber: ''});
-            if (sama) dup++;
-            else { entries16[i] = e; upd++; }
-          } else { byKode16.set(k, entries16.length); entries16.push(e); add++; }
-        }
-        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-6 (OMSPAN-TKD)', dibaca: rows.length, tambah: add, dup, upd});
-        toast(`✅ B1-6: ${add} desa ditambahkan, ${upd} diperbarui, ${dup} identik diabaikan.`, 'ok');
+        const r16 = merge16(rows);
+        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-6 (OMSPAN-TKD)', dibaca: rows.length, tambah: r16.add, dup: r16.dup, upd: r16.upd});
+        toast(`✅ B1-6: ${r16.add} desa ditambahkan, ${r16.upd} diperbarui, ${r16.dup} identik diabaikan.`, 'ok');
       } else if (tbl.idx['NO_KONTRAK'] != null){
         const rows = parseB14(tbl, f.name);
         let add = 0, dup = 0;
@@ -575,7 +646,8 @@ function stats14(list){
 }
 function stats16(list){
   const s = {desa: list.length, pemda: new Set(), salurNE: 0, belumNE: 0, salurE: 0, belumE: 0,
-    kuasa: 0, apbdes: 0, perkades: 0, tayl: 0, totNE: 0, totE: 0};
+    kuasa: 0, apbdes: 0, perkades: 0, tayl: 0, totNE: 0, totE: 0,
+    t2desa: 0, salurT2: 0, totT2: 0, serapAda: 0, uploadT2: 0, paguTayl: 0, t2ok: 0};
   for (const e of list){
     s.pemda.add(e.pemda);
     if (e.salur_ne === true) s.salurNE++; else if (e.salur_ne === false) s.belumNE++;
@@ -586,6 +658,15 @@ function stats16(list){
     if (e.tayl === true) s.tayl++;
     if (e.salur_ne_num) s.totNE += e.salur_ne_num;
     if (e.salur_e_num) s.totE += e.salur_e_num;
+    if (adaT2Data(e)){
+      s.t2desa++;
+      if (e.salur_t2 === true) s.salurT2++;
+      if (e.salur_t2_num) s.totT2 += e.salur_t2_num;
+      if (e.serap != null || e.capout != null) s.serapAda++;
+      if (e.upload_t2 === true) s.uploadT2++;
+      if (e.pagu_tayl === true) s.paguTayl++;
+      if (e.t2_ok === true) s.t2ok++;
+    }
   }
   return s;
 }
@@ -615,14 +696,25 @@ function simpulan16(){
   const s = stats16(entries16);
   const pemda = [...new Set(entries16.map(e => e.pemda).filter(Boolean))];
   const adaNominal = s.totNE > 0 || s.totE > 0;
-  return `Berdasarkan data monitoring syarat penyaluran (SPAN/OMSPAN-TKD) atas ${s.desa} desa pada ${pemda.length} ` +
+  let txt = `Berdasarkan data monitoring syarat penyaluran (SPAN/OMSPAN-TKD) atas ${s.desa} desa pada ${pemda.length} ` +
     `Pemda (${pemda.join(', ') || '—'}), pemenuhan dokumen syarat Dana Desa: Surat Kuasa pemindahbukuan sudah ` +
     `diverifikasi untuk ${s.kuasa} desa, APBDes diunggah ${s.apbdes} desa, Perkades KPM BLT diunggah ${s.perkades} desa` +
     (s.tayl ? `, Laporan Earmark TAYL sudah dikunci ${s.tayl} desa` : '') + `. ` +
     `Tahap I Non-Earmark: ${s.salurNE} desa Salur (${s.belumNE} belum)` + (adaNominal ? ` senilai total ${rp(s.totNE)}` : '') + `; ` +
-    `Tahap I Earmark: ${s.salurE} desa Salur (${s.belumE} belum)` + (adaNominal ? ` senilai total ${rp(s.totE)}` : '') + `. ` +
-    `Dokumen Tahap II serta dokumen pendukung lain (Surat Pengantar, Laporan Realisasi KPM, Akta KDMP, dan surat ` +
-    `pernyataan komitmen KDMP) belum tercakup dalam sumber data dan masih memerlukan verifikasi lanjutan.`;
+    `Tahap I Earmark: ${s.salurE} desa Salur (${s.belumE} belum)` + (adaNominal ? ` senilai total ${rp(s.totE)}` : '') + `. `;
+  if (s.t2desa){
+    txt += `Tahap II: berdasarkan monitoring Tahap 2, ${s.salurT2} desa Salur` +
+      (s.totT2 ? ` senilai total ${rp(s.totT2)}` : '') +
+      `, syarat salur Tahap I dinyatakan OK untuk ${s.t2ok} desa, kunci pagu TAYL sudah untuk ${s.paguTayl} desa, ` +
+      `Laporan Desa Tahap I (penyerapan & capaian output) tersedia untuk ${s.serapAda} desa, ` +
+      `dan dokumen persyaratan telah diunggah untuk ${s.uploadT2} desa. ` +
+      `Validitas dokumen serta dokumen yang belum tercakup sumber (Surat Pengantar, Laporan Realisasi TA lalu, ` +
+      `Akta/Komitmen KDMP secara rinci) masih memerlukan verifikasi lanjutan.`;
+  } else {
+    txt += `Dokumen Tahap II serta dokumen pendukung lain (Surat Pengantar, Laporan Realisasi KPM, Akta KDMP, dan surat ` +
+      `pernyataan komitmen KDMP) belum tercakup dalam sumber data — upload PDF Monitoring Tahap 2 untuk melengkapinya.`;
+  }
+  return txt;
 }
 
 /* ================= dokumen baku B1-6 ================= */
@@ -644,7 +736,16 @@ const N_ROWS16 = 5;
 function status16(e, grup, i){
   if (grup === 'NE1') return [salurText(e.salur_ne), adaText(e.apbdes), adaText(e.kuasa), adaText(e.blt), '—'][i];
   if (grup === 'E1')  return [salurText(e.salur_e), adaText(e.apbdes), adaText(e.kuasa), adaText(e.perkades)][i];
-  return '—';
+  // Tahap II (NE2 & E2), dari PDF Tahap 2:
+  // 1 Penyaluran | 2 Lap.Realisasi&Capaian Output TA lalu | 3 Lap.Tahap I TA berjalan | 4 Akta KDMP | 5 Komitmen KDMP
+  return [salurText(e.salur_t2),
+          '—',
+          (e.serap != null || e.capout != null) ? 'Ada' : '—',
+          adaText(e.upload_t2),
+          adaText(e.upload_t2)][i];
+}
+function adaT2Data(e){
+  return e.salur_t2 != null || e.upload_t2 != null || e.serap != null || e.capout != null || e.pagu_tayl != null;
 }
 
 /* ================= rebuild workbook ================= */
@@ -787,20 +888,24 @@ async function exportExcel(sheet){
 }
 
 /* ================= cetak PDF ================= */
-function printBlock(title, bodyHtml, meta){
+function printGabungan(secs){
   $('printArea').innerHTML = `
     <div class="p-head">
       <div class="p-app">Pemantauan Tematik DAK Fisik dan Dana Desa</div>
-      <h1>Kertas Kerja ${title}</h1>
-      <div class="p-sub">${title === 'B1-4' ? 'Kesesuaian Penggunaan Dana Penunjang' : 'Verifikasi Dokumen Syarat Penyaluran Dana Desa (DD)'}</div>
+      <h1>Kertas Kerja</h1>
+      <div class="p-sub">${secs.map(s => s.kode).join(' &amp; ')} &nbsp;•&nbsp; dicetak ${timeStr()}</div>
     </div>
-    <div class="p-meta">${meta}</div>
-    ${bodyHtml}`;
-  toast('🖨 Dialog cetak terbuka — pilih “Simpan sebagai PDF”.', 'ok');
+    ${secs.map((s, i) => `
+      <section class="p-sect"${i ? ' style="break-before:page"' : ''}>
+        <div class="p-sub p-sect-title">Kertas Kerja ${s.kode} — ${s.judul}</div>
+        <div class="p-meta">${s.meta}</div>
+        ${s.html}
+      </section>`).join('')}`;
+  toast(`\u{1F5A8} PDF memuat ${secs.length} kertas kerja (${secs.map(s => s.kode).join(' + ')}) — pilih \u201CSimpan sebagai PDF\u201D.`, 'ok');
   setTimeout(() => window.print(), 200);
 }
-function cetakPDF14(){
-  if (!entries14.length){ toast('Belum ada data B1-4.','bad'); return; }
+function seksi14(){
+  if (!entries14.length) return null;
   const blocks = groupBlocks14(entries14);
   const s = stats14(entries14);
   let rows = '';
@@ -813,14 +918,14 @@ function cetakPDF14(){
         `<td class="c ${e.kesesuaian === 'Sesuai' ? 'ok' : 'bad'}">${esc(e.kesesuaian)}</td></tr>`;
     });
   });
-  printBlock('B1-4',
-    `<table class="p-tbl"><thead><tr><th style="width:30px">No</th><th style="width:26%">Rincian Kegiatan</th><th>Nomor/Tanggal/Judul Kontrak</th><th style="width:95px">Jenis Pekerjaan</th><th style="width:85px">Kesesuaian</th></tr></thead><tbody>${rows}</tbody></table>
+  return {kode: 'B1-4', judul: 'Kesesuaian Penggunaan Dana Penunjang',
+    meta: `Sumber: SPAN — Modul DAK Fisik, menu &ldquo;Data Kontrak&rdquo; &nbsp;•&nbsp; ${s.blok.size} blok, ${s.entri} entri (Sesuai ${s.sesuai}, Tidak Sesuai ${s.tidak})`,
+    html: `<table class="p-tbl"><thead><tr><th style="width:30px">No</th><th style="width:26%">Rincian Kegiatan</th><th>Nomor/Tanggal/Judul Kontrak</th><th style="width:95px">Jenis Pekerjaan</th><th style="width:85px">Kesesuaian</th></tr></thead><tbody>${rows}</tbody></table>
      <div class="p-simp"><b>Simpulan</b><p>${esc(simpulan14())}</p></div>
-     <div class="p-note">Kategori dana penunjang: 1) Desain perencanaan; 2) Biaya tender; 3) Jasa pendamping/fasilitator non-ASN; 4) Jasa konsultan pengawas; 5) Rakor di Pemda; 6) Perjalanan dinas ke/dari lokasi kegiatan. Di luar itu: jenis pekerjaan Fisik.</div>`,
-    `Dicetak: ${timeStr()} &nbsp;•&nbsp; Sumber: SPAN — Modul DAK Fisik, menu “Data Kontrak” &nbsp;•&nbsp; ${s.blok.size} blok, ${s.entri} entri (Sesuai ${s.sesuai}, Tidak Sesuai ${s.tidak})`);
+     <div class="p-note">Kategori dana penunjang: 1) Desain perencanaan; 2) Biaya tender; 3) Jasa pendamping/fasilitator non-ASN; 4) Jasa konsultan pengawas; 5) Rakor di Pemda; 6) Perjalanan dinas ke/dari lokasi kegiatan. Di luar itu: jenis pekerjaan Fisik.</div>`};
 }
-function cetakPDF16(){
-  if (!entries16.length){ toast('Belum ada data B1-6.','bad'); return; }
+function seksi16(){
+  if (!entries16.length) return null;
   const s = stats16(entries16);
   const head = `<thead><tr><th style="width:26px">No</th><th style="width:15%">Desa (Jenis)</th><th>Non-Earmark Tahap I</th><th>Earmark Tahap I</th><th style="width:22%">Tahap II &amp; dokumen lanjutan</th></tr></thead>`;
   const mini = e => {
@@ -838,15 +943,30 @@ function cetakPDF16(){
       rows += `<tr><td class="c">${++no}</td><td><b>${esc(e.desa)}</b><br><span style="font-size:8px">${e.kec ? 'Kec.' + esc(e.kec) + ' • ' : ''}${esc(e.kodesa)} • ${esc(e.status || '-')}</span></td>` +
         `<td class="mini">${m.ne}${e.salur_ne_num ? `<div>Alokasi salur: <b>${rp(e.salur_ne_num)}</b></div>` : ''}</td>` +
         `<td class="mini">${m.e}${e.salur_e_num ? `<div>Alokasi salur: <b>${rp(e.salur_e_num)}</b></div>` : ''}</td>` +
-        `<td class="mini">— (belum tercakup sumber data)</td></tr>`;
+        `<td class="mini">${adaT2Data(e) ? (
+            `<div>Penyaluran: <b class="${e.salur_t2 === true ? 'ok' : e.salur_t2 === false ? 'bad' : ''}">${salurText(e.salur_t2)}</b></div>` +
+            (e.salur_t2_num ? `<div>Nilai salur T2: <b>${rp(e.salur_t2_num)}</b></div>` : '') +
+            (e.serap != null ? `<div>Serap T1: <b>${e.serap}%</b> · Cap. output: <b>${e.capout == null ? '—' : e.capout + '%'}</b></div>` : '') +
+            `<div>Syarat T1: <b class="${e.t2_ok === true ? 'ok' : ''}">${e.t2_ok == null ? '—' : (e.t2_ok ? 'OK' : 'Belum OK')}</b> · Pagu TAYL: <b class="${e.pagu_tayl === true ? 'ok' : ''}">${e.pagu_tayl == null ? '—' : (e.pagu_tayl ? 'sudah kunci' : 'belum')}</b></div>` +
+            `<div>Dokumen: <b class="${e.upload_t2 === true ? 'ok' : ''}">${e.upload_t2 == null ? '—' : (e.upload_t2 ? 'UPLOAD (Akta &amp; Komitmen KDMP)' : 'belum')}</b></div>`
+          ) : '— (belum ada data — upload PDF Tahap 2)'}</td></tr>`;
     }
   }
-  printBlock('B1-6',
-    `<table class="p-tbl">${head}<tbody>${rows}</tbody></table>
+  return {kode: 'B1-6', judul: 'Verifikasi Dokumen Syarat Penyaluran Dana Desa (DD)',
+    meta: `Sumber: SPAN/OMSPAN-TKD — Dana Desa &nbsp;•&nbsp; ${s.desa} desa, ${s.pemda.size} Pemda (Salur Tahap I NE: ${s.salurNE}, Earmark: ${s.salurE})` +
+      (s.t2desa ? ` &nbsp;•&nbsp; Tahap 2: ${s.t2desa} desa termuat, Salur ${s.salurT2}` : ''),
+    html: `<table class="p-tbl">${head}<tbody>${rows}</tbody></table>
      <div class="p-simp"><b>Simpulan</b><p>${esc(simpulan16())}</p></div>
-     <div class="p-note">Status dokumen: Ada / Tidak Ada / — (belum ada pada sumber data). Nilai validitas (Sesuai) diisi pada kertas kerja Excel setelah verifikasi dokumen fisik/elektronik.<br>Sumber pengambilan data: SPAN INT Kemenkeu — Modul Dana Desa, Monitoring Syarat Desa: ${SPAN_DD_URL}</div>`,
-    `Dicetak: ${timeStr()} &nbsp;•&nbsp; Sumber: SPAN/OMSPAN-TKD — Dana Desa &nbsp;•&nbsp; ${s.desa} desa, ${s.pemda.size} Pemda (Salur Tahap I NE: ${s.salurNE}, Earmark: ${s.salurE})`);
+     <div class="p-note">Status dokumen: Ada / Tidak Ada / — (belum ada pada sumber data). Nilai validitas (Sesuai) diisi pada kertas kerja Excel setelah verifikasi dokumen fisik/elektronik.<br>Sumber pengambilan data: SPAN INT Kemenkeu — Modul Dana Desa, Monitoring Syarat Desa: ${SPAN_DD_URL}</div>`};
 }
+function cetakSemua(){
+  const secs = [seksi14(), seksi16()].filter(Boolean);
+  if (!secs.length){ toast('Belum ada data — upload dulu file sumber.','bad'); return; }
+  printGabungan(secs);
+}
+/* semua tombol cetak memakai cetak gabungan */
+function cetakPDF14(){ cetakSemua(); }
+function cetakPDF16(){ cetakSemua(); }
 
 /* ================= cadangkan / pulihkan ================= */
 function backupJSON(){
@@ -945,6 +1065,9 @@ function render16(){
   $('st16Dok').textContent = `${s.kuasa} / ${s.apbdes} / ${s.perkades}`;
   $('st16Pemda').textContent = [...s.pemda].join(', ') || '—';
   $('st16Nom').textContent = (s.totNE || s.totE) ? `${rp(s.totNE)} · ${rp(s.totE)}` : '— (belum ada nominal pada sumber)';
+  $('st16T2').textContent = s.t2desa
+    ? `${s.t2desa} desa — Salur ${s.salurT2} (${s.totT2 ? rp(s.totT2) : 'nominal —'}) · dokumen upload ${s.uploadT2}`
+    : '— belum ada (upload PDF Tahap 2)';
   $('btnDl16').disabled = !entries16.length;
   const w = $('preview16');
   if (!entries16.length){
@@ -959,14 +1082,18 @@ function render16(){
         `<td>${badge(e.salur_ne, 'Salur', 'Belum')}${e.salur_ne_num ? `<br><small>${rp(e.salur_ne_num)}</small>` : ''}</td>` +
         `<td>${badge(e.apbdes)} ${badge(e.kuasa)}</td>` +
         `<td>${badge(e.salur_e, 'Salur', 'Belum')}${e.salur_e_num ? `<br><small>${rp(e.salur_e_num)}</small>` : ''}</td>` +
-        `<td>${badge(e.apbdes)} ${badge(e.kuasa)} ${badge(e.perkades)}</td></tr>`;
+        `<td>${badge(e.apbdes)} ${badge(e.kuasa)} ${badge(e.perkades)}</td>` +
+        `<td>${adaT2Data(e)
+            ? badge(e.salur_t2, 'Salur', 'Belum') + (e.salur_t2_num ? `<br><small>${rp(e.salur_t2_num)}</small>` : '') +
+              '<br>' + badge(e.t2_ok, 'T1 OK', 'T1 belum') + ' ' + badge(e.upload_t2, 'DOK UPLOAD', 'dok —')
+            : '<span class="bdg b-mut">belum upload T2</span>'}</td></tr>`;
     });
     const nSalurNE = desas.filter(e => e.salur_ne === true).length;
     const nSalurE = desas.filter(e => e.salur_e === true).length;
     html += `<details class="blk">
       <summary><span class="blk-t"><b>${esc(pemda)}</b> <small>• ${desas.length} desa</small></span>
       <span class="blk-b"><span class="bdg b-blue">NE Salur ${nSalurNE}</span> <span class="bdg b-ok">Earmark Salur ${nSalurE}</span></span></summary>
-      <div class="tblwrap"><table><thead><tr><th>No</th><th>Desa (Jenis)</th><th>NE T-I<br>Penyaluran</th><th>NE T-I<br>Dokumen</th><th>Earmark T-I<br>Penyaluran</th><th>Earmark T-I<br>Dokumen</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
+      <div class="tblwrap"><table><thead><tr><th>No</th><th>Desa (Jenis)</th><th>NE T-I<br>Penyaluran</th><th>NE T-I<br>Dokumen</th><th>Earmark T-I<br>Penyaluran</th><th>Earmark T-I<br>Dokumen</th><th>Tahap 2<br>Penyaluran &amp; Dokumen</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
   }
   w.innerHTML = html;
 }
@@ -989,6 +1116,12 @@ function render(){ render14(); render16(); renderLog(); }
 
 /* ================= init ================= */
 function init(){
+  /* pulihkan akumulasi tersimpan */
+  try {
+    entries14 = JSON.parse(localStorage.getItem(LS_E14) || '[]') || [];
+    entries16 = JSON.parse(localStorage.getItem(LS_E16) || '[]') || [];
+    uplog = JSON.parse(localStorage.getItem(LS_LOG) || '[]') || [];
+  } catch (e) { entries14 = []; entries16 = []; uplog = []; }
   /* aktifkan worker pdf.js secara offline (dari kode tersemat) */
   if (window.pdfjsLib && typeof PDF_WORKER_B64 !== 'undefined' && PDF_WORKER_B64.length > 100){
     try {
@@ -1023,5 +1156,5 @@ function init(){
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e6f75d1b24fd8c',t:'MTc4OTk3MTY1MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e7501339acc211',t:'MTc4OTk3NTI4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
