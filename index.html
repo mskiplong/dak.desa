@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<title>Aplikasi Kertas Kerja — B1-4</title>
+<title>Pemantauan Tematik DAK Fisik &amp; Dana Desa — Aplikasi Kertas Kerja</title>
 <style>
 :root{
   --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0; --txt:#0f172a; --mut:#64748b;
@@ -22,13 +22,12 @@ h1{font-size:clamp(18px,4.5vw,24px);line-height:1.25}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(15,23,42,.05)}
 .card h2{font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .hint{color:var(--mut);font-size:12.5px;margin-top:8px}
-/* chips kertas kerja */
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1px solid var(--line);background:#f8fafc;color:var(--txt);border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer;min-height:40px;transition:.15s}
-.chip:hover{border-color:var(--pri)}
-.chip-on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
-.soon{font-size:10px;opacity:.7;font-style:italic}
-.chip-on .soon{opacity:.9}
+/* dropdown kertas kerja */
+.sel{width:100%;padding:12px 14px;font-size:15px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--txt);min-height:48px;cursor:pointer}
+.sel:focus{outline:2px solid var(--pri-soft);border-color:var(--pri)}
+/* kotak referensi sumber data */
+.refbox{margin-top:12px;background:var(--warn-soft);border:1px solid #fcd34d;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#78350f}
+.refbox a{color:#92400e;word-break:break-all}
 /* drop zone */
 .drop{border:2px dashed #93c5fd;border-radius:var(--r);background:#eff6ff;padding:26px 16px;text-align:center;cursor:pointer;transition:.15s}
 .drop.over,.drop:hover{background:var(--pri-soft);border-color:var(--pri)}
@@ -83,6 +82,34 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
   .btn{flex:1 1 100%}
   .stats{grid-template-columns:repeat(2,1fr)}
 }
+/* ====== area cetak PDF ====== */
+#printArea{display:none}
+@page{size:A4 landscape;margin:12mm}
+@media print{
+  .wrap,.toast{display:none !important}
+  #printArea{display:block !important}
+  body{background:#fff;font-size:10px}
+}
+#printArea{font-family:Arial,Helvetica,sans-serif;color:#000}
+#printArea .p-head{text-align:center;margin-bottom:8px}
+#printArea .p-app{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#333}
+#printArea h1{font-size:17px;margin:2px 0}
+#printArea .p-sub{font-size:11.5px;font-weight:700}
+#printArea .p-meta{font-size:8.5px;color:#333;border-top:1.5px solid #000;border-bottom:1.5px solid #000;padding:4px 0;margin-bottom:8px}
+#printArea table{border-collapse:collapse;width:100%}
+#printArea th,#printArea td{border:1px solid #555;padding:5px 6px;vertical-align:top;text-align:left;font-size:9.5px}
+#printArea thead th{background:#e5e7eb;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px}
+#printArea .p-grp td{background:#f3f4f6;font-weight:700}
+#printArea .c{text-align:center}
+#printArea .ok{color:#15803d;font-weight:700}
+#printArea .bad{color:#b91c1c;font-weight:700}
+#printArea .p-simp{border:1px solid #555;padding:8px 10px;margin-top:10px;break-inside:avoid}
+#printArea .p-simp p{margin-top:4px;font-size:9.5px}
+#printArea .p-note{margin-top:8px;font-size:8px;color:#333;break-inside:avoid}
+@media print{
+  #printArea .p-grp td,#printArea thead th,#printArea .ok,#printArea .bad{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 </style>
 </head>
 <body>
@@ -90,15 +117,15 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
 
   <header class="top">
     <div>
-      <h1>📋 Aplikasi Kertas Kerja</h1>
-      <div class="sub">Restore data kontrak Excel → olah otomatis → download Excel sesuai format kertas kerja</div>
+      <h1>📊 Pemantauan Tematik DAK Fisik &amp; Dana Desa</h1>
+      <div class="sub">Aplikasi Kertas Kerja — restore data kontrak (SPAN) → olah otomatis → unduh Excel / cetak PDF</div>
     </div>
   </header>
 
   <!-- pilihan kertas kerja -->
   <section class="card">
     <h2>🗂 Pilih Kertas Kerja</h2>
-    <div class="chips" id="sheetList"></div>
+    <select id="sheetSel" class="sel" aria-label="Pilih kertas kerja"></select>
     <div class="hint">Aktif: <b>B1-4 — Kesesuaian Penggunaan Dana Penunjang</b>. Kertas kerja lain ruangnya sudah disiapkan; sumber data menyusul.</div>
   </section>
 
@@ -121,6 +148,8 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
         <div class="hint">Bisa beberapa file .xlsx sekaligus (mis. Kab. Batang, Kab. Pekalongan, Kota Pekalongan)</div>
       </div>
       <input type="file" id="fileInput" accept=".xlsx" multiple hidden>
+      <div class="refbox">📌 <b>Sumber data:</b> unduh dari <b>SPAN INT Kemenkeu → TKD → Modul DAK Fisik → Download → menu “Data Kontrak”</b><br>
+      <a href="https://spanint.kemenkeu.go.id/tkd/#/modul/dakf/download" target="_blank" rel="noopener">https://spanint.kemenkeu.go.id/tkd/#/modul/dakf/download</a></div>
       <div class="hint">Format kolom: ID, THANG, NM_LOKASI, BIDANG, NM_BIDANG, SUBBIDANG, NM_SUBBIDANG, MENU_KEGIATAN, NM_MENU_KEGIATAN, RINCIAN_KEGIATAN, NM_RINCIAN_KEGIATAN, NO_KONTRAK, TANGGAL_KONTRAK, JUDUL_KONTRAK, NM_JENIS_DANA. <b>Baris yang sama persis otomatis diabaikan (anti-duplikat); data baru selalu ditambahkan.</b></div>
     </section>
 
@@ -139,12 +168,13 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
       <h2>3️⃣ Hasil &amp; Download</h2>
       <div class="btn-row">
         <button class="btn btn-pri" id="btnDl" disabled>📥 Download Excel Kertas Kerja</button>
+        <button class="btn btn-sec" id="btnPdf">🖨 Cetak PDF</button>
         <button class="btn btn-sec" id="btnBackup">💾 Cadangkan (JSON)</button>
         <button class="btn btn-sec" id="btnRestore">♻️ Pulihkan (JSON)</button>
         <button class="btn btn-danger" id="btnReset">🗑 Reset</button>
       </div>
       <input type="file" id="restoreInput" accept=".json" hidden>
-      <div class="hint">Hasil Excel memakai template kertas kerja asli — semua sheet &amp; gambar tetap utuh, hanya B1-4 yang diisi. Cadangan JSON berguna untuk memindahkan data antar HP/PC.</div>
+      <div class="hint">Hasil Excel memakai template kertas kerja asli — semua sheet &amp; gambar tetap utuh, hanya B1-4 yang diisi. <b>Cetak PDF</b> membuka dialog cetak — pilih <b>“Simpan sebagai PDF”</b> (kertas A4 landscape otomatis). Cadangan JSON berguna untuk memindahkan data antar HP/PC.</div>
     </section>
 
     <section class="card">
@@ -163,6 +193,7 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="printArea" aria-hidden="true"></div>
 
 <script>/*! ExcelJS 19-10-2023 */
 
@@ -416,16 +447,7 @@ async function buildOutputWorkbook(){
   for (let rr = BLOCK_START; rr <= ws.rowCount; rr++){
     if (cellStr(ws.getCell('B' + rr).value).toLowerCase() === 'simpulan') { simp = rr; break; }
   }
-  if (simp){
-    const s = statsOf(entries);
-    const pemda = [...new Set(entries.map(e => e.pemda).filter(Boolean))];
-    const jd = [...new Set(entries.map(e => e.jenis_dana).filter(Boolean))];
-    ws.getCell('B' + (simp + 1)).value =
-      `Berdasarkan hasil verifikasi dokumen ${jd.join(', ') || 'DAK Fisik'} untuk kategori Kegiatan Penunjang ` +
-      `pada ${pemda.length} Pemda (${pemda.join(', ')}), terdapat ${s.sesuai} entri dana penunjang yang Sesuai ` +
-      `ketentuan dan ${s.tidak} entri yang Tidak Sesuai karena digunakan untuk jenis pekerjaan Fisik ` +
-      `di luar kategori yang diperkenankan.`;
-  }
+  if (simp) ws.getCell('B' + (simp + 1)).value = simpulanText();
   return wb;
 }
 
@@ -472,24 +494,67 @@ async function restoreJSON(file){
   }
 }
 
+/* ---------------- cetak PDF ---------------- */
+function simpulanText(){
+  const s = statsOf(entries);
+  const pemda = [...new Set(entries.map(e => e.pemda).filter(Boolean))];
+  const jd = [...new Set(entries.map(e => e.jenis_dana).filter(Boolean))];
+  return `Berdasarkan hasil verifikasi dokumen ${jd.join(', ') || 'DAK Fisik'} untuk kategori Kegiatan Penunjang ` +
+    `pada ${pemda.length} Pemda (${pemda.join(', ')}), terdapat ${s.sesuai} entri dana penunjang yang Sesuai ` +
+    `ketentuan dan ${s.tidak} entri yang Tidak Sesuai karena digunakan untuk jenis pekerjaan Fisik ` +
+    `di luar kategori yang diperkenankan.`;
+}
+
+function cetakPDF(){
+  if (!entries.length){ toast('Belum ada data — upload dulu file sumber.','bad'); return; }
+  const blocks = groupBlocks(entries);
+  const s = statsOf(entries);
+  let rows = '';
+  blocks.forEach((b, i) => {
+    rows += `<tr class="p-grp"><td colspan="5">${i + 1}. ${esc(b.bidang)} &nbsp;—&nbsp; ${esc(b.pemda)} &nbsp;•&nbsp; ${esc(b.subbidang)}</td></tr>`;
+    b.entri.forEach((e, j) => {
+      rows += `<tr><td class="c">${j + 1}</td>` +
+        `<td>${esc(e.rk)} - ${esc(e.nm_rk)}</td>` +
+        `<td>${esc([e.no_kontrak, e.tgl, e.judul].filter(Boolean).join(' - '))}</td>` +
+        `<td class="c">${esc(e.jenis)}</td>` +
+        `<td class="c ${e.kesesuaian === 'Sesuai' ? 'ok' : 'bad'}">${esc(e.kesesuaian)}</td></tr>`;
+    });
+  });
+  $('printArea').innerHTML = `
+    <div class="p-head">
+      <div class="p-app">Pemantauan Tematik DAK Fisik dan Dana Desa</div>
+      <h1>Kertas Kerja B1-4</h1>
+      <div class="p-sub">Kesesuaian Penggunaan Dana Penunjang</div>
+    </div>
+    <div class="p-meta">Dicetak: ${timeStr()} &nbsp;•&nbsp; Sumber data: SPAN — Modul DAK Fisik, menu &ldquo;Data Kontrak&rdquo; &nbsp;•&nbsp; ${s.blok.size} blok, ${s.entri} entri (Sesuai ${s.sesuai}, Tidak Sesuai ${s.tidak})</div>
+    <table class="p-tbl">
+      <thead><tr><th style="width:30px">No</th><th style="width:26%">Rincian Kegiatan</th><th>Nomor/Tanggal/Judul Kontrak</th><th style="width:95px">Jenis Pekerjaan</th><th style="width:85px">Kesesuaian</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="p-simp"><b>Simpulan</b><p>${esc(simpulanText())}</p></div>
+    <div class="p-note">Kategori dana penunjang: 1) Desain perencanaan kegiatan kontraktual; 2) Biaya tender; 3) Jasa pendamping/fasilitator non-ASN; 4) Jasa konsultan pengawas; 5) Penyelenggaraan rakor di Pemda; 6) Perjalanan dinas ke/dari lokasi kegiatan. Di luar kategori tersebut jenis pekerjaan: Fisik.</div>`;
+  toast('🖨 Dialog cetak terbuka — pilih “Simpan sebagai PDF”.', 'ok');
+  setTimeout(() => window.print(), 200);
+}
+
 /* ---------------- render UI ---------------- */
 function renderSheets(){
-  const w = $('sheetList'); let html = '';
+  let html = '';
   for (const name of SHEET_LIST){
     const aktif = name === ACTIVE_SHEET;
-    html += `<button type="button" class="chip ${aktif ? 'chip-on' : ''}" data-sheet="${esc(name)}">${esc(name)}${aktif ? '' : ' ·<span class="soon">segera</span>'}</button>`;
+    html += `<option value="${esc(name)}" ${aktif ? 'selected' : ''}>${esc(name)}${aktif ? '  ✅ aktif' : '  ⏳ segera'}</option>`;
   }
-  w.innerHTML = html;
-  w.querySelectorAll('button').forEach(b => b.addEventListener('click', () => selectSheet(b.dataset.sheet)));
+  const sel = $('sheetSel');
+  sel.innerHTML = html;
+  sel.addEventListener('change', () => selectSheet(sel.value));
 }
 let curSheet = ACTIVE_SHEET;
 function selectSheet(name){
   curSheet = name;
+  const sel = $('sheetSel'); if (sel && sel.value !== name) sel.value = name;
   $('panelUtama').style.display = name === ACTIVE_SHEET ? '' : 'none';
   $('panelSoon').style.display = name === ACTIVE_SHEET ? 'none' : '';
   $('soonTitle').textContent = 'Kertas kerja: ' + name;
-  document.querySelectorAll('#sheetList .chip').forEach(c =>
-    c.classList.toggle('chip-on', c.dataset.sheet === name));
 }
 
 function renderStats(){
@@ -553,6 +618,7 @@ function init(){
   ['dragleave','dragend','drop'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.remove('over'); }));
   $('drop').addEventListener('drop', e => handleFiles(e.dataTransfer.files));
   $('btnDl').addEventListener('click', exportExcel);
+  $('btnPdf').addEventListener('click', cetakPDF);
   $('btnReset').addEventListener('click', () => {
     if (!entries.length){ toast('Data sudah kosong.','ok'); return; }
     if (confirm(`Hapus SEMUA ${entries.length} entri akumulasi?\nSebaiknya Cadangkan (JSON) dulu bila masih diperlukan.`)){
@@ -566,5 +632,5 @@ function init(){
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e624db8e477da9',t:'MTc4OTk2MzAyNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e63500e861008f',t:'MTc4OTk2MzY4OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
