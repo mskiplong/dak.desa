@@ -157,6 +157,7 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
       <a href="https://spanint.kemenkeu.go.id/tkd/#/modul/dakf/download" target="_blank" rel="noopener">https://spanint.kemenkeu.go.id/tkd/#/modul/dakf/download</a></div>
       <div class="refbox" style="background:var(--pri-soft);border-color:#93c5fd;color:#1e3a8a">📌 <b>Sumber data B1-6 (disarankan: PDF):</b> unduh <b>PDF “Monitoring Pemenuhan Persyaratan Penyaluran” Tahap 1 dan/atau Tahap 2</b> dari <b>SPAN INT Kemenkeu → TKD → Modul Dana Desa → Monitoring Syarat Desa</b> (tahap terdeteksi otomatis; keduanya digabung per desa)<br>
       <a href="https://spanint.kemenkeu.go.id/tkd/#/modul/dd/2025/getMonitoringSrtDesa/0305/REGULER/1" target="_blank" rel="noopener">https://spanint.kemenkeu.go.id/tkd/#/modul/dd/2025/getMonitoringSrtDesa/0305/REGULER/1</a><br>
+      Dokumen nominal: <b>PDF “Monitoring Penyaluran Dana Desa per Desa”</b> (isi nama desa, kecamatan, PAGU, dan nominal penyaluran NE/Earmark Tahap 1–2; kabupaten/kota terdeteksi otomatis dari kode desa).<br>
       <small>Alternatif: Excel <b>OMSPAN-TKD</b> (kolom KAB/KOTA, DESA, KODE DESA, STATUS DESA, KUASA, APBDES(NON BLT), BLT, PERKADES(BLT), KUNCI_BLT, SALUR TAHAP 1 NONEARMARK, SALUR TAHAP 1 EARMARK) — namun banyak kolom kosong, PDF lebih lengkap (ada kecamatan, status verifikasi, dan nominal salur).</small></div>
       <div class="hint">Anti-duplikat otomatis: baris B1-4 yang sama persis diabaikan; desa B1-6 yang identik diabaikan (kunci: kode desa) dan bila statusnya berubah akan <b>diperbarui</b>. Data baru selalu ditambahkan ke akumulasi.</div>
     </section>
@@ -412,6 +413,51 @@ function normPemda(x){ return String(x || '').toUpperCase().replace(/\s+/g, ' ')
 function numId(s){ const n = parseInt(String(s || '').replace(/[.,]/g, ''), 10); return isNaN(n) ? null : n; }
 function numDec(s){ const n = parseFloat(String(s || '').replace(',', '.')); return isNaN(n) ? null : n; }
 
+/* kamus kode kabupaten/kota Jawa Tengah (4 digit awal kode desa) */
+const KODE_PEMDA_JATENG = {
+  '3301':'KAB. CILACAP','3302':'KAB. BANYUMAS','3303':'KAB. PURBALINGGA','3304':'KAB. BANJARNEGARA',
+  '3305':'KAB. KEBUMEN','3306':'KAB. PURWOREJO','3307':'KAB. WONOSOBO','3308':'KAB. MAGELANG',
+  '3309':'KAB. BOYOLALI','3310':'KAB. KLATEN','3311':'KAB. SUKOHARJO','3312':'KAB. WONOGIRI',
+  '3313':'KAB. KARANGANYAR','3314':'KAB. SRAGEN','3315':'KAB. GROBOGAN','3316':'KAB. BLORA',
+  '3317':'KAB. REMBANG','3318':'KAB. PATI','3319':'KAB. KUDUS','3320':'KAB. JEPARA',
+  '3321':'KAB. DEMAK','3322':'KAB. SEMARANG','3323':'KAB. TEMANGGUNG','3324':'KAB. KENDAL',
+  '3325':'KAB. BATANG','3326':'KAB. PEKALONGAN','3327':'KAB. PEMALANG','3328':'KAB. TEGAL',
+  '3329':'KAB. BREBES','3371':'KOTA MAGELANG','3372':'KOTA SURAKARTA','3373':'KOTA SALATIGA',
+  '3374':'KOTA SEMARANG','3375':'KOTA PEKALONGAN','3376':'KOTA TEGAL'
+};
+/* nama Pemda dari kode desa (untuk sumber tanpa kolom kabupaten) */
+function pemdaDariKode(kodesa){
+  const p = String(kodesa || '').slice(0, 4);
+  return KODE_PEMDA_JATENG[p] || ('KODE ' + p);
+}
+
+/* PDF "Monitoring Penyaluran Dana Desa Per Desa" (sumber ketiga — nominal resmi T1 & T2 + pagu)
+   kolom: NO KODE NAMA KECAMATAN STATUS PAGU PAGUTBH NE1 NE2 E1 E2 TBH TOTAL % */
+const ROW16S_RE = /^(\d{1,4})\s+(\d{10})\s+(.+?)\s+(\S+)\s+(MAJU|BERKEMBANG|MANDIRI)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.,]+)\s*$/;
+function parseS(lines, fname){
+  const out = []; let gagal = 0;
+  for (const line of lines){
+    const m = line.match(ROW16S_RE);
+    if (!m){ if (/^\d+\s+\d{10}/.test(line)) gagal++; continue; }
+    const g = i => numId(m[i]);
+    const ne1 = g(8), ne2 = g(9), e1 = g(10), e2 = g(11);
+    const t2 = (ne2 || 0) + (e2 || 0);
+    out.push({
+      pemda: pemdaDariKode(m[2]), kab: m[2].slice(0, 4), desa: m[3].trim(), kec: m[4].trim(),
+      kodesa: m[2], status: m[5],
+      pagu: g(6), pagu_tambahan: g(7),
+      salur_ne: ne1 > 0, salur_ne_num: ne1,
+      salur_e: e1 > 0, salur_e_num: e1,
+      salur_t2: t2 > 0, salur_t2_num: t2,
+      salur_ne2_num: ne2, salur_e2_num: e2,
+      tambahan_dana: g(12), total_penyaluran: g(13), persen: numDec(m[14]),
+      __soft: ['desa', 'kec', 'status'],   // jangan menimpa nama/kec/status dari PDF Tahap 1-2 yg lebih rinci
+      sumber: fname
+    });
+  }
+  return {out, gagal};
+}
+
 function parseT1(lines, fname){
   const out = []; let gagal = 0;
   for (const line of lines){
@@ -453,18 +499,19 @@ function parseT2(lines, fname){
   return {out, gagal};
 }
 
-/* urai PDF Monitoring Pemenuhan Persyaratan (Tahap 1 / Tahap 2 otomatis) */
+/* urai PDF Dana Desa: "Penyaluran per Desa" (nominal) atau "Pemenuhan Persyaratan" Tahap 1 / Tahap 2 — otomatis */
 async function parsePdf16(buf, fname){
   if (!window.pdfjsLib) throw new Error('Pustaka PDF (pdf.js) tidak berhasil dimuat.');
   const doc = await pdfjsLib.getDocument({data: new Uint8Array(buf), isEvalSupported: false}).promise;
   const lines = await pdfLines(doc);
-  const isT2 = lines.some(l => /SALUR TAHAP\s*2|PENYERAPAN/i.test(l));
-  const {out, gagal} = isT2 ? parseT2(lines, fname) : parseT1(lines, fname);
+  const isSalur = lines.some(l => /MONITORING PENYALURAN DANA DESA PER DESA/i.test(l));
+  const isT2 = !isSalur && lines.some(l => /SALUR TAHAP\s*2|PENYERAPAN/i.test(l));
+  const {out, gagal} = isSalur ? parseS(lines, fname) : isT2 ? parseT2(lines, fname) : parseT1(lines, fname);
   if (!out.length)
-    throw new Error('Tidak ada baris desa yang dikenali — pastikan ini PDF "Monitoring Pemenuhan Persyaratan Penyaluran" dari SPAN.');
+    throw new Error('Tidak ada baris desa yang dikenali — pastikan ini PDF Monitoring Dana Desa (Pemenuhan Persyaratan / Penyaluran per Desa) dari SPAN.');
   if (gagal) uplog.push({waktu: timeStr(), file: fname, fmt: 'peringatan',
     err: gagal + ' baris desa tidak terbaca (format menyimpang)'});
-  return {tahap: isT2 ? 2 : 1, rows: out};
+  return {tahap: isSalur ? 'Penyaluran' : (isT2 ? 2 : 1), rows: out};
 }
 
 /* ================= upload (auto-deteksi format) ================= */
@@ -474,18 +521,25 @@ function sumber16(a, b){
   if (b && !s.includes(b)) s.push(b);
   return s.join(' | ');
 }
-/* gabungkan per KODE DESA: nilai baru (terdefinisi) menimpa; nilai lama dipertahankan bila baru tidak ada */
+/* gabungkan per KODE DESA: nilai baru (terdefinisi) menimpa; nilai lama dipertahankan bila baru tidak ada.
+   Field dalam __soft milik baris baru hanya mengisi bila nilai lama kosong (mis. desa/kec/status dari PDF Penyaluran). */
 function merge16(rows){
   const m = new Map(entries16.map((e, i) => [key16(e), i]));
   let add = 0, dup = 0, upd = 0;
   for (const e of rows){
     const k = key16(e);
-    if (!m.has(k)){ m.set(k, entries16.length); entries16.push(e); add++; continue; }
+    if (!m.has(k)){
+      const {__soft, ...row} = e;
+      m.set(k, entries16.length); entries16.push(row); add++; continue;
+    }
     const i = m.get(k), old = entries16[i];
     const merged = {...old};
+    const soft = new Set(e.__soft || []);
     for (const kk of Object.keys(e)){
-      if (kk === 'sumber') continue;
-      if (e[kk] !== undefined && e[kk] !== null) merged[kk] = e[kk];
+      if (kk === 'sumber' || kk === '__soft') continue;
+      if (e[kk] === undefined || e[kk] === null) continue;
+      if (soft.has(kk) && !(old[kk] === undefined || old[kk] === null || old[kk] === '')) continue;
+      merged[kk] = e[kk];
     }
     merged.sumber = sumber16(old.sumber, e.sumber);
     const berubah = JSON.stringify({...old, sumber: ''}) !== JSON.stringify({...merged, sumber: ''});
@@ -591,9 +645,10 @@ async function handleFiles(fileList){
       const wb = new ExcelJS.Workbook();
       if (isPdf){
         const {tahap, rows} = await parsePdf16(await f.arrayBuffer(), f.name);
+        const lbl = tahap === 'Penyaluran' ? 'Penyaluran per Desa' : 'Tahap ' + tahap;
         const r16 = merge16(rows);
-        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-6 (PDF Tahap ' + tahap + ')', dibaca: rows.length, tambah: r16.add, dup: r16.dup, upd: r16.upd});
-        toast(`✅ B1-6 Tahap ${tahap}: ${r16.add} desa baru, ${r16.upd} diperbarui/digabung, ${r16.dup} identik.`, 'ok');
+        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-6 (PDF ' + lbl + ')', dibaca: rows.length, tambah: r16.add, dup: r16.dup, upd: r16.upd});
+        toast(`✅ B1-6 ${lbl}: ${r16.add} desa baru, ${r16.upd} diperbarui/digabung, ${r16.dup} identik.`, 'ok');
         continue;
       }
       await wb.xlsx.load(await f.arrayBuffer());
@@ -647,7 +702,8 @@ function stats14(list){
 function stats16(list){
   const s = {desa: list.length, pemda: new Set(), salurNE: 0, belumNE: 0, salurE: 0, belumE: 0,
     kuasa: 0, apbdes: 0, perkades: 0, tayl: 0, totNE: 0, totE: 0,
-    t2desa: 0, salurT2: 0, totT2: 0, serapAda: 0, uploadT2: 0, paguTayl: 0, t2ok: 0};
+    t2desa: 0, salurT2: 0, totT2: 0, totNE2: 0, totE2: 0, serapAda: 0, uploadT2: 0, paguTayl: 0, t2ok: 0,
+    totPagu: 0, dbesarPagu: 0};
   for (const e of list){
     s.pemda.add(e.pemda);
     if (e.salur_ne === true) s.salurNE++; else if (e.salur_ne === false) s.belumNE++;
@@ -658,10 +714,13 @@ function stats16(list){
     if (e.tayl === true) s.tayl++;
     if (e.salur_ne_num) s.totNE += e.salur_ne_num;
     if (e.salur_e_num) s.totE += e.salur_e_num;
+    if (e.pagu){ s.totPagu += e.pagu; s.dbesarPagu++; }
     if (adaT2Data(e)){
       s.t2desa++;
       if (e.salur_t2 === true) s.salurT2++;
       if (e.salur_t2_num) s.totT2 += e.salur_t2_num;
+      if (e.salur_ne2_num) s.totNE2 += e.salur_ne2_num;
+      if (e.salur_e2_num) s.totE2 += e.salur_e2_num;
       if (e.serap != null || e.capout != null) s.serapAda++;
       if (e.upload_t2 === true) s.uploadT2++;
       if (e.pagu_tayl === true) s.paguTayl++;
@@ -696,18 +755,28 @@ function simpulan16(){
   const s = stats16(entries16);
   const pemda = [...new Set(entries16.map(e => e.pemda).filter(Boolean))];
   const adaNominal = s.totNE > 0 || s.totE > 0;
+  const adaDoc = s.kuasa > 0 || s.apbdes > 0 || s.perkades > 0 || s.tayl > 0;
   let txt = `Berdasarkan data monitoring syarat penyaluran (SPAN/OMSPAN-TKD) atas ${s.desa} desa pada ${pemda.length} ` +
-    `Pemda (${pemda.join(', ') || '—'}), pemenuhan dokumen syarat Dana Desa: Surat Kuasa pemindahbukuan sudah ` +
-    `diverifikasi untuk ${s.kuasa} desa, APBDes diunggah ${s.apbdes} desa, Perkades KPM BLT diunggah ${s.perkades} desa` +
-    (s.tayl ? `, Laporan Earmark TAYL sudah dikunci ${s.tayl} desa` : '') + `. ` +
+    `Pemda (${pemda.join(', ') || '—'})` +
+    (s.totPagu ? ` dengan total pagu Dana Desa ${rp(s.totPagu)} (${s.dbesarPagu} desa)` : '') +
+    (adaDoc
+      ? `, pemenuhan dokumen syarat Dana Desa: Surat Kuasa pemindahbukuan sudah ` +
+        `diverifikasi untuk ${s.kuasa} desa, APBDes diunggah ${s.apbdes} desa, Perkades KPM BLT diunggah ${s.perkades} desa` +
+        (s.tayl ? `, Laporan Earmark TAYL sudah dikunci ${s.tayl} desa` : '') + `. `
+      : `, status dokumen syarat (Surat Kuasa, APBDes, Perkades KPM BLT) belum tercakup sumber data. `) +
     `Tahap I Non-Earmark: ${s.salurNE} desa Salur (${s.belumNE} belum)` + (adaNominal ? ` senilai total ${rp(s.totNE)}` : '') + `; ` +
     `Tahap I Earmark: ${s.salurE} desa Salur (${s.belumE} belum)` + (adaNominal ? ` senilai total ${rp(s.totE)}` : '') + `. `;
   if (s.t2desa){
-    txt += `Tahap II: berdasarkan monitoring Tahap 2, ${s.salurT2} desa Salur` +
-      (s.totT2 ? ` senilai total ${rp(s.totT2)}` : '') +
-      `, syarat salur Tahap I dinyatakan OK untuk ${s.t2ok} desa, kunci pagu TAYL sudah untuk ${s.paguTayl} desa, ` +
-      `Laporan Desa Tahap I (penyerapan & capaian output) tersedia untuk ${s.serapAda} desa, ` +
-      `dan dokumen persyaratan telah diunggah untuk ${s.uploadT2} desa. ` +
+    const adaDocT2 = s.t2ok > 0 || s.paguTayl > 0 || s.serapAda > 0 || s.uploadT2 > 0;
+    txt += `Tahap II: ${s.salurT2} desa Salur` +
+      ((s.totNE2 || s.totE2) ? ` senilai total ${rp(s.totNE2 + s.totE2)} (Non-Earmark ${rp(s.totNE2)}, Earmark ${rp(s.totE2)})`
+                            : (s.totT2 ? ` senilai total ${rp(s.totT2)}` : '')) +
+      (adaDocT2
+        ? `, syarat salur Tahap I dinyatakan OK untuk ${s.t2ok} desa, kunci pagu TAYL sudah untuk ${s.paguTayl} desa, ` +
+          `Laporan Desa Tahap I (penyerapan & capaian output) tersedia untuk ${s.serapAda} desa, ` +
+          `dan dokumen persyaratan telah diunggah untuk ${s.uploadT2} desa. `
+        : `; status dokumen syarat Tahap II (kunci TAYL, laporan penyerapan, upload dokumen) belum tercakup sumber data. `) +
+      (s.dbesarPagu ? '' : `Nominal penyaluran per tahap dapat dilengkapi dengan PDF "Monitoring Penyaluran Dana Desa per Desa". `) +
       `Validitas dokumen serta dokumen yang belum tercakup sumber (Surat Pengantar, Laporan Realisasi TA lalu, ` +
       `Akta/Komitmen KDMP secara rinci) masih memerlukan verifikasi lanjutan.`;
   } else {
@@ -945,7 +1014,10 @@ function seksi16(){
         `<td class="mini">${m.e}${e.salur_e_num ? `<div>Alokasi salur: <b>${rp(e.salur_e_num)}</b></div>` : ''}</td>` +
         `<td class="mini">${adaT2Data(e) ? (
             `<div>Penyaluran: <b class="${e.salur_t2 === true ? 'ok' : e.salur_t2 === false ? 'bad' : ''}">${salurText(e.salur_t2)}</b></div>` +
-            (e.salur_t2_num ? `<div>Nilai salur T2: <b>${rp(e.salur_t2_num)}</b></div>` : '') +
+            ((e.salur_ne2_num != null || e.salur_e2_num != null)
+              ? `<div>Nilai T2: NE <b>${rp(e.salur_ne2_num)}</b> · Emark <b>${rp(e.salur_e2_num)}</b></div>`
+              : (e.salur_t2_num ? `<div>Nilai salur T2: <b>${rp(e.salur_t2_num)}</b></div>` : '')) +
+            (e.pagu != null ? `<div>Pagu DD: <b>${rp(e.pagu)}</b>${e.persen != null ? ` · tersalur <b>${e.persen}%</b>` : ''}</div>` : '') +
             (e.serap != null ? `<div>Serap T1: <b>${e.serap}%</b> · Cap. output: <b>${e.capout == null ? '—' : e.capout + '%'}</b></div>` : '') +
             `<div>Syarat T1: <b class="${e.t2_ok === true ? 'ok' : ''}">${e.t2_ok == null ? '—' : (e.t2_ok ? 'OK' : 'Belum OK')}</b> · Pagu TAYL: <b class="${e.pagu_tayl === true ? 'ok' : ''}">${e.pagu_tayl == null ? '—' : (e.pagu_tayl ? 'sudah kunci' : 'belum')}</b></div>` +
             `<div>Dokumen: <b class="${e.upload_t2 === true ? 'ok' : ''}">${e.upload_t2 == null ? '—' : (e.upload_t2 ? 'UPLOAD (Akta &amp; Komitmen KDMP)' : 'belum')}</b></div>`
@@ -1071,7 +1143,7 @@ function render16(){
   $('btnDl16').disabled = !entries16.length;
   const w = $('preview16');
   if (!entries16.length){
-    w.innerHTML = '<div class="empty">Belum ada data B1-6. Upload file <b>OMSPAN-TKD</b> (Dana Desa).</div>';
+    w.innerHTML = '<div class="empty">Belum ada data B1-6. Upload PDF <b>Monitoring Pemenuhan Persyaratan (Tahap 1/2)</b> atau <b>Monitoring Penyaluran Dana Desa per Desa</b> dari SPAN.</div>';
     return;
   }
   let html = '';
@@ -1084,7 +1156,10 @@ function render16(){
         `<td>${badge(e.salur_e, 'Salur', 'Belum')}${e.salur_e_num ? `<br><small>${rp(e.salur_e_num)}</small>` : ''}</td>` +
         `<td>${badge(e.apbdes)} ${badge(e.kuasa)} ${badge(e.perkades)}</td>` +
         `<td>${adaT2Data(e)
-            ? badge(e.salur_t2, 'Salur', 'Belum') + (e.salur_t2_num ? `<br><small>${rp(e.salur_t2_num)}</small>` : '') +
+            ? badge(e.salur_t2, 'Salur', 'Belum') +
+              ((e.salur_ne2_num != null || e.salur_e2_num != null)
+                ? `<br><small>NE ${rp(e.salur_ne2_num)} · E ${rp(e.salur_e2_num)}</small>`
+                : (e.salur_t2_num ? `<br><small>${rp(e.salur_t2_num)}</small>` : '')) +
               '<br>' + badge(e.t2_ok, 'T1 OK', 'T1 belum') + ' ' + badge(e.upload_t2, 'DOK UPLOAD', 'dok —')
             : '<span class="bdg b-mut">belum upload T2</span>'}</td></tr>`;
     });
@@ -1156,5 +1231,5 @@ function init(){
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e7501339acc211',t:'MTc4OTk3NTI4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e7c468097ab584',t:'MTc4OTk4MDA0OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
