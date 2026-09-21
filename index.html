@@ -70,6 +70,7 @@ th{background:#f1f5f9;font-size:11px;text-transform:uppercase;letter-spacing:.4p
 .log li{padding:8px 4px;border-top:1px solid var(--line)}
 .log li:first-child{border-top:0}
 .log-t{color:var(--mut);font-size:11px}
+.log-src{color:var(--mut);font-size:11px;word-break:break-all}
 /* soon panel */
 .icon-xl{font-size:44px;text-align:center;margin:6px 0 10px}
 .center{text-align:center}
@@ -155,10 +156,14 @@ footer{color:var(--mut);font-size:11.5px;text-align:center;margin-top:18px}
       <input type="file" id="fileInput" accept=".xlsx,.pdf" multiple hidden>
       <div class="refbox">📌 <b>Sumber data B1-4:</b> unduh dari <b>SPAN INT Kemenkeu → TKD → Modul DAK Fisik → Download → menu “Data Kontrak”</b><br>
       <a href="https://spanint.kemenkeu.go.id/tkd/#/modul/dakf/download" target="_blank" rel="noopener">https://spanint.kemenkeu.go.id/tkd/#/modul/dakf/download</a></div>
-      <div class="refbox" style="background:var(--pri-soft);border-color:#93c5fd;color:#1e3a8a">📌 <b>Sumber data B1-6 (disarankan: PDF):</b> unduh <b>PDF “Monitoring Pemenuhan Persyaratan Penyaluran” Tahap 1 dan/atau Tahap 2</b> dari <b>SPAN INT Kemenkeu → TKD → Modul Dana Desa → Monitoring Syarat Desa</b> (tahap terdeteksi otomatis; keduanya digabung per desa)<br>
-      <a href="https://spanint.kemenkeu.go.id/tkd/#/modul/dd/2025/getMonitoringSrtDesa/0305/REGULER/1" target="_blank" rel="noopener">https://spanint.kemenkeu.go.id/tkd/#/modul/dd/2025/getMonitoringSrtDesa/0305/REGULER/1</a><br>
-      Dokumen nominal: <b>PDF “Monitoring Penyaluran Dana Desa per Desa”</b> (isi nama desa, kecamatan, PAGU, dan nominal penyaluran NE/Earmark Tahap 1–2; kabupaten/kota terdeteksi otomatis dari kode desa).<br>
-      <small>Alternatif: Excel <b>OMSPAN-TKD</b> (kolom KAB/KOTA, DESA, KODE DESA, STATUS DESA, KUASA, APBDES(NON BLT), BLT, PERKADES(BLT), KUNCI_BLT, SALUR TAHAP 1 NONEARMARK, SALUR TAHAP 1 EARMARK) — namun banyak kolom kosong, PDF lebih lengkap (ada kecamatan, status verifikasi, dan nominal salur).</small></div>
+      <div class="refbox" style="background:var(--pri-soft);border-color:#93c5fd;color:#1e3a8a">📌 <b>Sumber data B1-6 (PDF):</b> unduh dari <b>SPAN INT Kemenkeu → TKD → Modul Dana Desa → Monitoring → Realisasi Provinsi</b>:<br>
+      <a href="https://spanint.kemenkeu.go.id/tkd/#/modul/dd/monitoring/2025/realProv" target="_blank" rel="noopener">https://spanint.kemenkeu.go.id/tkd/#/modul/dd/monitoring/2025/realProv</a><br>
+      Di halaman itu tersedia 3 laporan yang semuanya bisa diupload (format terdeteksi otomatis, digabung per kode desa, urutan upload bebas):
+      <b>① Monitoring Pemenuhan Persyaratan Penyaluran Tahap 1</b> (status dokumen: kuasa, APBDes, BLT, Perkades, TAYL),
+      <b>② Monitoring Pemenuhan Persyaratan Penyaluran Tahap 2</b> (syarat Tahap II & upload dokumen), dan
+      <b>③ Monitoring Penyaluran Dana Desa per Desa</b> (PAGU + nominal penyaluran NE/Earmark Tahap 1–2; kabupaten/kota terdeteksi otomatis dari kode desa).<br>
+      <small>Alternatif: Excel <b>OMSPAN-TKD</b> (kolom KAB/KOTA, DESA, KODE DESA, STATUS DESA, KUASA, APBDES(NON BLT), BLT, PERKADES(BLT), KUNCI_BLT, SALUR TAHAP 1 NONEARMARK, SALUR TAHAP 1 EARMARK) — namun banyak kolom kosong, PDF lebih lengkap (ada kecamatan, status verifikasi, dan nominal salur).<br>
+      Laporan syarat desa Tahap 1 juga dapat diakses langsung: https://spanint.kemenkeu.go.id/tkd/#/modul/dd/2025/getMonitoringSrtDesa/0305/REGULER/1</small></div>
       <div class="hint">Anti-duplikat otomatis: baris B1-4 yang sama persis diabaikan; desa B1-6 yang identik diabaikan (kunci: kode desa) dan bila statusnya berubah akan <b>diperbarui</b>. Data baru selalu ditambahkan ke akumulasi.</div>
     </section>
   </div>
@@ -389,6 +394,7 @@ function stOK16(v){
 }
 
 const SPAN_DD_URL = 'https://spanint.kemenkeu.go.id/tkd/#/modul/dd/2025/getMonitoringSrtDesa/0305/REGULER/1';
+const SPAN_DD_MON_URL = 'https://spanint.kemenkeu.go.id/tkd/#/modul/dd/monitoring/2025/realProv';
 const ROW16T1_RE = /^(\d{1,4})\s+(\d{4})-([A-Z][A-Z .]*[A-Z.])\s+(.+?)\s*-\s*Kec\.([A-Za-z .]+?)\s+(\d{10})\s+(MAJU|BERKEMBANG|MANDIRI)\s+(Sudah Verifikasi|Belum Verifikasi|-)\s+(UPLOAD|-)\s+(upload|-)\s+(YA|TIDAK|-)\s+(UPLOAD|-)\s+(sudah kunci|belum kunci|-)\s+([\d.,]+)\s+([\d.,]+)\s*$/;
 const ROW16T2_RE = /^(\d{1,4})\s+(\d{4})-([A-Za-z.]+\s+[A-Za-z]+(?:\s+[A-Za-z]+)?)\s+(.+?)\s*-\s*Kec\.([A-Za-z .]+?)\s+(\d{10})\s+(MAJU|BERKEMBANG|MANDIRI)\s+([A-Za-z]+(?: [A-Za-z]+)?)\s+(sudah kunci|belum kunci|-)\s+([\d.,]+)\s+([\d.,]+)\s+(UPLOAD|-)(?:\s+([\d.,]+))?\s*$/;
 
@@ -647,7 +653,7 @@ async function handleFiles(fileList){
         const {tahap, rows} = await parsePdf16(await f.arrayBuffer(), f.name);
         const lbl = tahap === 'Penyaluran' ? 'Penyaluran per Desa' : 'Tahap ' + tahap;
         const r16 = merge16(rows);
-        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-6 (PDF ' + lbl + ')', dibaca: rows.length, tambah: r16.add, dup: r16.dup, upd: r16.upd});
+        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-6 (PDF ' + lbl + ')', sumber_web: SPAN_DD_MON_URL, dibaca: rows.length, tambah: r16.add, dup: r16.dup, upd: r16.upd});
         toast(`✅ B1-6 ${lbl}: ${r16.add} desa baru, ${r16.upd} diperbarui/digabung, ${r16.dup} identik.`, 'ok');
         continue;
       }
@@ -666,7 +672,7 @@ async function handleFiles(fileList){
           if (known14.has(k)) dup++;
           else { known14.add(k); entries14.push(e); add++; }
         }
-        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-4 (Data Kontrak)', dibaca: rows.length, tambah: add, dup});
+        uplog.push({waktu: timeStr(), file: f.name, fmt: 'B1-4 (Data Kontrak)', sumber_web: 'https://spanint.kemenkeu.go.id/tkd/#/modul/dakf/download', dibaca: rows.length, tambah: add, dup});
         toast(`✅ B1-4: ${add} entri ditambahkan, ${dup} duplikat diabaikan.`, 'ok');
       } else {
         throw new Error('Format tidak dikenali — bukan "Data Kontrak" (B1-4) maupun "OMSPAN-TKD" (B1-6).');
@@ -1029,7 +1035,7 @@ function seksi16(){
       (s.t2desa ? ` &nbsp;•&nbsp; Tahap 2: ${s.t2desa} desa termuat, Salur ${s.salurT2}` : ''),
     html: `<table class="p-tbl">${head}<tbody>${rows}</tbody></table>
      <div class="p-simp"><b>Simpulan</b><p>${esc(simpulan16())}</p></div>
-     <div class="p-note">Status dokumen: Ada / Tidak Ada / — (belum ada pada sumber data). Nilai validitas (Sesuai) diisi pada kertas kerja Excel setelah verifikasi dokumen fisik/elektronik.<br>Sumber pengambilan data: SPAN INT Kemenkeu — Modul Dana Desa, Monitoring Syarat Desa: ${SPAN_DD_URL}</div>`};
+     <div class="p-note">Status dokumen: Ada / Tidak Ada / — (belum ada pada sumber data). Nilai validitas (Sesuai) diisi pada kertas kerja Excel setelah verifikasi dokumen fisik/elektronik.<br>Sumber pengambilan data: SPAN INT Kemenkeu — TKD → Modul Dana Desa → Monitoring → Realisasi Provinsi: ${SPAN_DD_MON_URL}<br>(laporan Monitoring Syarat Desa: ${SPAN_DD_URL})</div>`};
 }
 function cetakSemua(){
   const secs = [seksi14(), seksi16()].filter(Boolean);
@@ -1183,6 +1189,7 @@ function renderLog(){
       : `${l.dibaca ?? '?'} baris dibaca, <span class="ok">${l.tambah ?? 0} ditambah</span>` +
         (l.upd ? `, <span class="warn">${l.upd} diperbarui</span>` : '') +
         `, <span class="warn">${l.dup ?? 0} identik diabaikan</span>`;
+    if (l.sumber_web) html += `<br><small class="log-src">↳ sumber: ${esc(l.sumber_web)}</small>`;
     html += '</li>';
   }
   w.innerHTML = html + '</ul>';
@@ -1231,5 +1238,5 @@ function init(){
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e7c468097ab584',t:'MTc4OTk4MDA0OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3e7d3ad9fc0b5a6',t:'MTc4OTk4MDY3NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
